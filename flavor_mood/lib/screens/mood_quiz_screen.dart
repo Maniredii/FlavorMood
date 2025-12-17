@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'pantry_scan_screen.dart';
 
 class MoodQuizScreen extends StatefulWidget {
   const MoodQuizScreen({super.key});
@@ -12,54 +13,44 @@ class _MoodQuizScreenState extends State<MoodQuizScreen> {
   double _hungerLevel = 50.0;
 
   String _getStressLabel() {
-    if (_stressLevel < 25) return 'Relaxed 😌';
-    if (_stressLevel < 50) return 'Calm 🙂';
-    if (_stressLevel < 75) return 'Tense 😰';
-    return 'Very Stressed 😫';
+    if (_stressLevel < 25) return 'Relaxed';
+    if (_stressLevel < 50) return 'Calm';
+    if (_stressLevel < 75) return 'Tense';
+    return 'Stressed';
   }
 
   String _getHungerLabel() {
-    if (_hungerLevel < 25) return 'Not Hungry 😊';
-    if (_hungerLevel < 50) return 'A Bit Hungry 🙂';
-    if (_hungerLevel < 75) return 'Hungry 😋';
-    return 'Very Hungry 🤤';
+    if (_hungerLevel < 25) return 'Not Hungry';
+    if (_hungerLevel < 50) return 'A Bit Hungry';
+    if (_hungerLevel < 75) return 'Hungry';
+    return 'Very Hungry';
   }
 
   Color _getStressColor() {
     return Color.lerp(
-      Colors.green,
-      Colors.red,
+      Colors.green.shade600,
+      Colors.red.shade600,
       _stressLevel / 100,
     )!;
   }
 
   Color _getHungerColor() {
     return Color.lerp(
-      Colors.blue,
-      Colors.orange,
+      Colors.blue.shade600,
+      Colors.orange.shade600,
       _hungerLevel / 100,
     )!;
   }
 
-  void _onProceed() {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Your Mood 🎯'),
-          content: Text(
-            'Stress Level: ${_stressLevel.round()}% - ${_getStressLabel()}\n'
-            'Hunger Level: ${_hungerLevel.round()}% - ${_getHungerLabel()}\n\n'
-            'Finding your perfect recipe...',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Awesome!'),
-            ),
-          ],
-        );
-      },
+  void _onNext() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => PantryScanScreen(
+          stressLevel: _stressLevel,
+          hungerLevel: _hungerLevel,
+        ),
+      ),
     );
   }
 
@@ -70,274 +61,260 @@ class _MoodQuizScreenState extends State<MoodQuizScreen> {
       appBar: AppBar(
         title: const Text(
           'FlavorMood',
-          style: TextStyle(fontWeight: FontWeight.bold),
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            letterSpacing: 0.5,
+          ),
         ),
         centerTitle: true,
         backgroundColor: Colors.orange,
         elevation: 0,
       ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.all(24.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          // Responsive padding based on screen width
+          final horizontalPadding = constraints.maxWidth > 600 ? 48.0 : 20.0;
+          final maxContentWidth = constraints.maxWidth > 600 ? 600.0 : constraints.maxWidth;
+
+          return SafeArea(
+            child: Center(
+              child: Container(
+                constraints: BoxConstraints(maxWidth: maxContentWidth),
+                child: SingleChildScrollView(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: horizontalPadding,
+                    vertical: 24.0,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      // Welcome Header
+                      const SizedBox(height: 8),
+                      Text(
+                        'Welcome!',
+                        style: Theme.of(context).textTheme.headlineLarge?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'How are you feeling today?',
+                        style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                          fontWeight: FontWeight.w500,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Select your mood to find the perfect recipe',
+                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                          color: Colors.grey.shade700,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 32),
+
+                      // Stress Level Card
+                      _buildMoodCard(
+                        title: 'Stress Level',
+                        icon: Icons.psychology_outlined,
+                        value: _stressLevel,
+                        label: _getStressLabel(),
+                        color: _getStressColor(),
+                        onChanged: (value) {
+                          setState(() {
+                            _stressLevel = value;
+                          });
+                        },
+                        minLabel: 'Relaxed',
+                        maxLabel: 'Stressed',
+                      ),
+                      const SizedBox(height: 20),
+
+                      // Hunger Level Card
+                      _buildMoodCard(
+                        title: 'Hunger Level',
+                        icon: Icons.restaurant_outlined,
+                        value: _hungerLevel,
+                        label: _getHungerLabel(),
+                        color: _getHungerColor(),
+                        onChanged: (value) {
+                          setState(() {
+                            _hungerLevel = value;
+                          });
+                        },
+                        minLabel: 'Not Hungry',
+                        maxLabel: 'Very Hungry',
+                      ),
+                      const SizedBox(height: 32),
+
+                      // Next Button
+                      SizedBox(
+                        height: 56,
+                        child: ElevatedButton(
+                          onPressed: _onNext,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.orange,
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            elevation: 2,
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: const [
+                              Text(
+                                'Next',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w600,
+                                  letterSpacing: 0.5,
+                                ),
+                              ),
+                              SizedBox(width: 8),
+                              Icon(Icons.arrow_forward, size: 20),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildMoodCard({
+    required String title,
+    required IconData icon,
+    required double value,
+    required String label,
+    required Color color,
+    required ValueChanged<double> onChanged,
+    required String minLabel,
+    required String maxLabel,
+  }) {
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Title and Label
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                // Welcome Header
-                const SizedBox(height: 20),
-                Text(
-                  '👋 Welcome!',
-                  style: Theme.of(context).textTheme.headlineLarge,
-                  textAlign: TextAlign.center,
+                Row(
+                  children: [
+                    Icon(icon, color: Colors.grey.shade700, size: 24),
+                    const SizedBox(width: 10),
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.black87,
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 12),
-                Text(
-                  'How are you feeling today?',
-                  style: Theme.of(context).textTheme.headlineMedium,
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Let us find the perfect recipe based on your mood!',
-                  style: Theme.of(context).textTheme.bodyLarge,
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 40),
-
-                // Stress Level Card
-                Card(
-                  elevation: 4,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
                   ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(20.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            const Text(
-                              '😰 Stress Level',
-                              style: TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 6,
-                              ),
-                              decoration: BoxDecoration(
-                                color: _getStressColor().withOpacity(0.2),
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(
-                                  color: _getStressColor(),
-                                  width: 2,
-                                ),
-                              ),
-                              child: Text(
-                                _getStressLabel(),
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.bold,
-                                  color: _getStressColor(),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 16),
-                        SliderTheme(
-                          data: SliderTheme.of(context).copyWith(
-                            activeTrackColor: _getStressColor(),
-                            inactiveTrackColor: _getStressColor().withOpacity(0.3),
-                            thumbColor: _getStressColor(),
-                            overlayColor: _getStressColor().withOpacity(0.2),
-                            trackHeight: 8,
-                            thumbShape: const RoundSliderThumbShape(
-                              enabledThumbRadius: 14,
-                            ),
-                          ),
-                          child: Slider(
-                            value: _stressLevel,
-                            min: 0,
-                            max: 100,
-                            divisions: 100,
-                            onChanged: (value) {
-                              setState(() {
-                                _stressLevel = value;
-                              });
-                            },
-                          ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                'Relaxed',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.grey.shade600,
-                                ),
-                              ),
-                              Text(
-                                '${_stressLevel.round()}%',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.bold,
-                                  color: _getStressColor(),
-                                ),
-                              ),
-                              Text(
-                                'Very Stressed',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.grey.shade600,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
+                  decoration: BoxDecoration(
+                    color: color.withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: color,
+                      width: 1.5,
                     ),
                   ),
-                ),
-                const SizedBox(height: 24),
-
-                // Hunger Level Card
-                Card(
-                  elevation: 4,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(20.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            const Text(
-                              '🍽️ Hunger Level',
-                              style: TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 6,
-                              ),
-                              decoration: BoxDecoration(
-                                color: _getHungerColor().withOpacity(0.2),
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(
-                                  color: _getHungerColor(),
-                                  width: 2,
-                                ),
-                              ),
-                              child: Text(
-                                _getHungerLabel(),
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.bold,
-                                  color: _getHungerColor(),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 16),
-                        SliderTheme(
-                          data: SliderTheme.of(context).copyWith(
-                            activeTrackColor: _getHungerColor(),
-                            inactiveTrackColor: _getHungerColor().withOpacity(0.3),
-                            thumbColor: _getHungerColor(),
-                            overlayColor: _getHungerColor().withOpacity(0.2),
-                            trackHeight: 8,
-                            thumbShape: const RoundSliderThumbShape(
-                              enabledThumbRadius: 14,
-                            ),
-                          ),
-                          child: Slider(
-                            value: _hungerLevel,
-                            min: 0,
-                            max: 100,
-                            divisions: 100,
-                            onChanged: (value) {
-                              setState(() {
-                                _hungerLevel = value;
-                              });
-                            },
-                          ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                'Not Hungry',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.grey.shade600,
-                                ),
-                              ),
-                              Text(
-                                '${_hungerLevel.round()}%',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.bold,
-                                  color: _getHungerColor(),
-                                ),
-                              ),
-                              Text(
-                                'Very Hungry',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.grey.shade600,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 40),
-
-                // Proceed Button
-                ElevatedButton(
-                  onPressed: _onProceed,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.orange,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 18),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    elevation: 6,
-                  ),
-                  child: const Text(
-                    '🍳 Find My Perfect Recipe',
+                  child: Text(
+                    label,
                     style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: color,
                     ),
                   ),
                 ),
-                const SizedBox(height: 20),
               ],
             ),
-          ),
+            const SizedBox(height: 16),
+            
+            // Slider
+            SliderTheme(
+              data: SliderTheme.of(context).copyWith(
+                activeTrackColor: color,
+                inactiveTrackColor: color.withOpacity(0.25),
+                thumbColor: color,
+                overlayColor: color.withOpacity(0.2),
+                trackHeight: 6,
+                thumbShape: const RoundSliderThumbShape(
+                  enabledThumbRadius: 12,
+                ),
+              ),
+              child: Slider(
+                value: value,
+                min: 0,
+                max: 100,
+                divisions: 100,
+                onChanged: onChanged,
+              ),
+            ),
+            
+            // Min/Max Labels and Percentage
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Flexible(
+                    child: Text(
+                      minLabel,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey.shade600,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                  Text(
+                    '${value.round()}%',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: color,
+                    ),
+                  ),
+                  Flexible(
+                    child: Text(
+                      maxLabel,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey.shade600,
+                        fontWeight: FontWeight.w500,
+                      ),
+                      textAlign: TextAlign.end,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );
